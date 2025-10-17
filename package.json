@@ -1,0 +1,68 @@
+{
+  "name": "eslint-plugin-consistent-comments",
+  "version": "1.0.0",
+  "description": "A eslint plugin to format comments in a consistent way.",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin",
+    "comments",
+    "formatting",
+    "javascript",
+    "typescript"
+  ],
+  "homepage": "https://github.com/JohnMostlyR/eslint-plugin-consistent-comments",
+  "bugs": {
+    "url": "https://github.com/JohnMostlyR/eslint-plugin-consistent-comments/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohnMostlyR/eslint-plugin-consistent-comments.git"
+  },
+  "license": "MIT",
+  "author": "Johan Meester",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "clean": "git clean -xdf .cache dist node_modules",
+    "coverage": "vitest run --coverage",
+    "format": "eslint --ignore-path .gitignore --write .",
+    "lint": "eslint --fix .",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "devDependencies": {
+    "@eslint/compat": "1.4.0",
+    "@ianvs/eslint-plugin-sort-imports": "4.7.0",
+    "@types/eslint": "9.6.1",
+    "@types/estree": "1.0.8",
+    "@types/node": "24.8.1",
+    "@vitest/coverage-v8": "3.2.4",
+    "eslint": "9.37.0",
+    "eslint-plugin-sonarjs": "3.0.5",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.1",
+    "unbuild": "3.6.1",
+    "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  }
+}
