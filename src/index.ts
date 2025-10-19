@@ -1,9 +1,24 @@
 import type { ESLint, Rule } from 'eslint';
+import * as espree from 'espree';
 
 /**
- * Detects if a comment contains code by checking for common code patterns
+ * Detects if a comment contains code by attempting to parse it as JavaScript/TypeScript.
+ *
+ * This function uses AST parsing instead of regex patterns to accurately determine
+ * if a comment contains valid code. This approach handles edge cases that regex
+ * patterns might miss, such as:
+ * - Text that looks like code but has invalid syntax (e.g., "const x = incomplete")
+ * - Valid expressions (e.g., "true", "42", "{ key: 'value' }")
+ * - Complex code patterns (e.g., arrow functions, object/array literals)
+ *
+ * Strategy:
+ * 1. First, try parsing as a complete program
+ * 2. If that fails, try parsing as an expression (wrapped in parentheses)
+ * 3. If that fails, try parsing as a statement (wrapped in a function)
+ * 4. If all parsing attempts fail, it's considered text, not code
+ *
  * @param text - The comment text to analyze
- * @returns true if the comment appears to contain code
+ * @returns true if the comment appears to contain valid code
  */
 function isCommentedCode(text: string): boolean {
   const trimmed = text.trim();
@@ -11,42 +26,51 @@ function isCommentedCode(text: string): boolean {
   /* Empty comments are not code */
   if (!trimmed) return false;
 
-  /* Check for common code patterns */
-  const codePatterns = [
-    /* Variable declarations */
-    /^(const|let|var|function|class|interface|type|enum)\s+/,
+  /* Try to parse the uncommented text as JavaScript code */
+  try {
+    /* Use the same parser options as the current file */
+    const parserOptions: espree.Options = {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      ecmaFeatures: {
+        jsx: true,
+        globalReturn: false,
+      },
+    };
 
-    /* Control flow */
-    /^(if|else|for|while|do|switch|case|break|continue|return|throw|try|catch|finally)\s*[({]/,
+    /* Attempt to parse as a complete program */
+    espree.parse(trimmed, parserOptions);
+    return true;
+  } catch (programError) {
+    /* If it fails as a program, try parsing as an expression */
+    try {
+      const parserOptions: espree.Options = {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+          globalReturn: false,
+        },
+      };
 
-    /* Function calls and method chains */
-    /^[\w$.]+\s*\(/,
-    /^[\w$.]+\s*\.\s*[\w$]+/,
-
-    /* Assignment operators */
-    /^[\w$.]+\s*[=+\-*/%&|^]=?\s*/,
-
-    /* Array/object literals at start */
-    /^[\[{]/,
-
-    /* Arrow functions */
-    /^\(.*\)\s*=>/,
-    /^[\w$]+\s*=>/,
-
-    /* Import/export statements */
-    /^(import|export)\s+/,
-
-    /* Semicolons at end (common in commented code) */
-    /;$/,
-
-    /* JSX/TSX elements */
-    /^<[\w/]/,
-
-    /* Type annotations */
-    /:\s*(string|number|boolean|any|void|never|unknown|object)\s*[,;)=]/,
-  ];
-
-  return codePatterns.some((pattern) => pattern.test(trimmed));
+      /* Wrap in parentheses to try as expression */
+      espree.parse(`(${trimmed})`, parserOptions);
+      return true;
+    } catch (expressionError) {
+      /* Also try common statement patterns that might not parse standalone */
+      try {
+        /* Try wrapping in a function to see if it's a valid statement */
+        espree.parse(`function _test() { ${trimmed} }`, {
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+        });
+        return true;
+      } catch {
+        /* Not valid code in any form */
+        return false;
+      }
+    }
+  }
 }
 
 /**
@@ -85,16 +109,21 @@ const commentStyleRule: Rule.RuleModule = {
             comment.range &&
             sourceCode.text.slice(comment.range[0], comment.range[1]);
 
-          /* Don't touch triple-slash directives (e.g. /// <reference ... />)
-             or directive-like comments such as @ts-ignore, eslint-disable, prettier-ignore, istanbul ignore, etc. */
+          /*
+           * Don't touch triple-slash directives (e.g. /// <reference ... />)
+           * or directive-like comments such as @ts-ignore, eslint-disable,
+           * prettier-ignore, istanbul ignore, etc.
+           */
           const trimmedRaw = raw ? raw.trimStart() : '';
 
           if (trimmedRaw.startsWith('///')) continue;
 
-          // Detect directive-like comments in both line (// ...) and block (slash-star ... star-slash)
-          // forms. The regex matches common directive prefixes used by TypeScript, ESLint,
-          // Prettier, Istanbul/coverage tools, Deno, TSLint, and similar. It allows optional
-          // spacing and is case-insensitive.
+          /*
+           * Detect directive-like comments in both line (// ...) and block (slash-star ... star-slash)
+           * forms. The regex matches common directive prefixes used by TypeScript, ESLint,
+           * Prettier, Istanbul/coverage tools, Deno, TSLint, and similar. It allows optional
+           * spacing and is case-insensitive.
+           */
           const directiveBody =
             '(?:@ts-ignore\\b|@ts-expect-error\\b|ts-?nocheck\\b|tslint:|eslint(?:-(?:disable|enable)(?:-next-line|-line)?)?\\b|eslint-?env\\b|prettier-ignore\\b|istanbul(?:\\s+ignore(?:[-\\s]next|\\b))?\\b|deno-lint-ignore\\b)';
 
