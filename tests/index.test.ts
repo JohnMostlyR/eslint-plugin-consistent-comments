@@ -95,10 +95,106 @@ describe('eslint-plugin-consistent-comments', () => {
     });
   });
 
+  describe('edge cases', () => {
+    it('should not flag triple slash directives', () => {
+      ruleTester.run('comment-style', rule, {
+        valid: [
+          {
+            code: '/// <reference types="vitest/config" />',
+            filename: 'test.ts',
+          },
+          {
+            code: '/// <reference path="./types.d.ts" />',
+            filename: 'test.ts',
+          },
+          {
+            code: '// @ts-ignore: some reason',
+            filename: 'test.ts',
+          },
+          {
+            code: '// eslint-disable-next-line no-unused-vars',
+            filename: 'test.ts',
+          },
+          // Additional directive variations
+          {
+            code: '  //   @ts-expect-error  ',
+            filename: 'test.ts',
+          },
+          {
+            code: '\t// istanbul ignore next',
+            filename: 'test.ts',
+          },
+          {
+            code: '/* prettier-ignore */',
+            filename: 'test.ts',
+          },
+          {
+            code: '/* ISTANBUL   IGNORE-NEXT */',
+            filename: 'test.ts',
+          },
+          {
+            code: '// deno-lint-ignore no-explicit-any',
+            filename: 'test.ts',
+          },
+        ],
+        invalid: [],
+      });
+    });
+
+    it('should fix comments that only look like directives but are not', () => {
+      ruleTester.run('comment-style', rule, {
+        valid: [],
+        invalid: [
+          {
+            code: '// @ts-ignoreX this is not a real directive',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useMultiLineForText' }],
+            output: '/* @ts-ignoreX this is not a real directive */',
+          },
+          {
+            code: '// eslint-wtf should be fixed',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useMultiLineForText' }],
+            output: '/* eslint-wtf should be fixed */',
+          },
+          {
+            code: '// istanbul-ignoreer not a directive',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useMultiLineForText' }],
+            output: '/* istanbul-ignoreer not a directive */',
+          },
+        ],
+      });
+    });
+
+    it('edge-case: unicode whitespace and template strings', () => {
+      ruleTester.run('comment-style', rule, {
+        valid: [
+          {
+            // Using a NBSP (U+00A0) before a directive should still be considered a directive
+            code: '//\u00A0@ts-ignore use NBSP before directive',
+            filename: 'test.ts',
+          },
+          {
+            // Template literal containing comment-like content should not be interpreted as comments
+            code: 'const tpl = `/* not a comment */\n// not a comment inside string`;',
+            filename: 'test.ts',
+          },
+          {
+            // A multi-line block that contains a directive and explanatory text should remain a block
+            code: `/*\n * prettier-ignore\n * Keep this block as documentation and directive together\n */`,
+            filename: 'test.ts',
+          },
+        ],
+        invalid: [],
+      });
+    });
+  });
+
   describe('plugin configuration', () => {
     it('should have correct metadata', () => {
       expect(plugin.meta?.name).toBe('eslint-plugin-consistent-comments');
-      expect(plugin.meta?.version).toBe('1.0.0');
+      expect(plugin.meta?.version).toBe('1.1.0');
     });
 
     it('should have comment-style rule', () => {
