@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "1.4.0",
-    "@ianvs/eslint-plugin-sort-imports": "4.7.0",
+    "@ianvs/prettier-plugin-sort-imports": "4.7.0",
     "@types/eslint": "9.6.1",
     "@types/estree": "1.0.8",
     "@types/node": "24.8.1",
