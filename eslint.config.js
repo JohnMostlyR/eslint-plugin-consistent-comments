@@ -22,7 +22,6 @@ export const config = [
         parser: tseslint.parser,
         projectService: false,
         sourceType: 'module',
-        // tsconfigRootDir: import.meta.dirname,
       },
     },
   },

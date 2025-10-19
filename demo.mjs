@@ -6,10 +6,10 @@ import tseslint from 'typescript-eslint';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import the plugin
+/* Import the plugin */
 const plugin = await import('./dist/index.mjs');
 
-// Create ESLint instance
+/* Create ESLint instance */
 const eslint = new ESLint({
   overrideConfigFile: true,
   baseConfig: {
@@ -32,18 +32,18 @@ const eslint = new ESLint({
   fix: process.argv.includes('--fix'),
 });
 
-// Lint the example file
+/* Lint the example file */
 const results = await eslint.lintFiles([
   join(__dirname, 'examples/before-fix.ts'),
 ]);
 
-// Format results
+/* Format results */
 const formatter = await eslint.loadFormatter('stylish');
 const resultText = formatter.format(results);
 
 console.log(resultText);
 
-// Show summary
+/* Show summary */
 const errorCount = results.reduce((sum, r) => sum + r.errorCount, 0);
 const warningCount = results.reduce((sum, r) => sum + r.warningCount, 0);
 const fixableErrorCount = results.reduce(
