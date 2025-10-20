@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
@@ -64,6 +65,68 @@ describe('eslint-plugin-consistent-comments', () => {
         fixturesDir,
         'multi-line-block-cases-fixed.ts',
       );
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the triple-slash file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'triple-slash.ts');
+      const filePathToFixed = join(fixturesDir, 'triple-slash-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      // If no fixes were applied, output will be undefined, so read the original file
+      const actualOutput =
+        results[0]!.output ?? (await readFile(filePathToTest, 'utf-8'));
+
+      await expect(actualOutput).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the code-detection file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'code-detection.ts');
+      const filePathToFixed = join(fixturesDir, 'code-detection-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the directives file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'directives.ts');
+      const filePathToFixed = join(fixturesDir, 'directives-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the consecutive-comments file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'consecutive-comments.ts');
+      const filePathToFixed = join(
+        fixturesDir,
+        'consecutive-comments-fixed.ts',
+      );
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the mixed-scenarios file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'mixed-scenarios.ts');
+      const filePathToFixed = join(fixturesDir, 'mixed-scenarios-fixed.ts');
 
       const results = await eslint.lintFiles([filePathToTest]);
 

@@ -13,9 +13,11 @@ import * as espree from 'espree';
  *
  * Strategy:
  * 1. First, try parsing as a complete program
- * 2. If that fails, try parsing as an expression (wrapped in parentheses)
- * 3. If that fails, try parsing as a statement (wrapped in a function)
- * 4. If all parsing attempts fail, it's considered text, not code
+ * 2. If successful, check if it's just a single identifier (which is text, not code)
+ * 3. If that fails, try parsing as an expression (wrapped in parentheses)
+ * 4. If that fails, try parsing as an object property (wrapped in object literal)
+ * 5. If that fails, try parsing as a statement (wrapped in a function)
+ * 6. If all parsing attempts fail, it's considered text, not code
  *
  * @param text - The comment text to analyze
  * @returns true if the comment appears to contain valid code
@@ -39,7 +41,21 @@ function isCommentedCode(text: string): boolean {
     };
 
     /* Attempt to parse as a complete program */
-    espree.parse(trimmed, parserOptions);
+    const ast = espree.parse(trimmed, parserOptions);
+
+    /*
+     * If the parsed program is just a single identifier (e.g., "Electron", "TODO"),
+     * treat it as text rather than code. Single identifiers are typically section
+     * labels or category headers, not commented-out code.
+     */
+    if (
+      ast.body.length === 1 &&
+      ast.body[0]?.type === 'ExpressionStatement' &&
+      ast.body[0].expression.type === 'Identifier'
+    ) {
+      return false;
+    }
+
     return true;
   } catch (programError) {
     /* If it fails as a program, try parsing as an expression */
@@ -57,17 +73,26 @@ function isCommentedCode(text: string): boolean {
       espree.parse(`(${trimmed})`, parserOptions);
       return true;
     } catch (expressionError) {
-      /* Also try common statement patterns that might not parse standalone */
+      /* Try parsing as an object property (handles cases like "key: value,") */
       try {
-        /* Try wrapping in a function to see if it's a valid statement */
-        espree.parse(`function _test() { ${trimmed} }`, {
+        espree.parse(`({${trimmed}})`, {
           ecmaVersion: 'latest',
           sourceType: 'module',
         });
         return true;
-      } catch {
-        /* Not valid code in any form */
-        return false;
+      } catch (objectError) {
+        /* Also try common statement patterns that might not parse standalone */
+        try {
+          /* Try wrapping in a function to see if it's a valid statement */
+          espree.parse(`function _test() { ${trimmed} }`, {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+          });
+          return true;
+        } catch {
+          /* Not valid code in any form */
+          return false;
+        }
       }
     }
   }
@@ -153,6 +178,12 @@ const commentStyleRule: Rule.RuleModule = {
 
             // Skip conversion if the comment contains */ which would break multi-line syntax
             if (text.includes('*/')) {
+              continue;
+            }
+
+            // Skip triple-slash directives (e.g., /// <reference types="..." />)
+            // These are TypeScript compiler directives that must remain as ///
+            if (commentText.startsWith('/')) {
               continue;
             }
 
@@ -256,7 +287,7 @@ const commentStyleRule: Rule.RuleModule = {
 const plugin: ESLint.Plugin = {
   meta: {
     name: 'eslint-plugin-consistent-comments',
-    version: '1.2.0',
+    version: '1.3.0',
   },
   configs: {
     recommended: {
