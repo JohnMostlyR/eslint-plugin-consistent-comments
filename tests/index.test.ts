@@ -194,7 +194,7 @@ describe('eslint-plugin-consistent-comments', () => {
   describe('plugin configuration', () => {
     it('should have correct metadata', () => {
       expect(plugin.meta?.name).toBe('eslint-plugin-consistent-comments');
-      expect(plugin.meta?.version).toBe('1.1.0');
+      expect(plugin.meta?.version).toBe('1.2.0');
     });
 
     it('should have comment-style rule', () => {
