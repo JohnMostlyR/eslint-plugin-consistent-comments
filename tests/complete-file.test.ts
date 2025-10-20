@@ -85,5 +85,52 @@ describe('eslint-plugin-consistent-comments', () => {
 
       await expect(actualOutput).toMatchFileSnapshot(filePathToFixed);
     });
+
+    it('should correctly lint the code-detection file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'code-detection.ts');
+      const filePathToFixed = join(fixturesDir, 'code-detection-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the directives file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'directives.ts');
+      const filePathToFixed = join(fixturesDir, 'directives-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the consecutive-comments file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'consecutive-comments.ts');
+      const filePathToFixed = join(
+        fixturesDir,
+        'consecutive-comments-fixed.ts',
+      );
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the mixed-scenarios file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'mixed-scenarios.ts');
+      const filePathToFixed = join(fixturesDir, 'mixed-scenarios-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
   });
 });
