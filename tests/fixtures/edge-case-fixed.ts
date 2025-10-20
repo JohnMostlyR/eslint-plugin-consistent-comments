@@ -13,9 +13,13 @@
 // import React from 'react';
 
 /* These should remain as block comments (NOT valid code) */
+
 /* This is a regular comment about something */
+
 /* TODO: implement this feature later */
+
 /* Note: this is important to remember */
+
 /* const x = incomplete syntax here */
 /* function() without proper syntax */
 /* This has const in it but is not code */
@@ -24,10 +28,15 @@
 /* What does this function do? */
 
 // These should NOT be converted to /* */ (results in invalid code)
+
 /* This is a regular comment */
+
 /* TODO: fix this */
+
 /* Note about the implementation */
+
 /* What happens here? */
+
 /* See: https://example.com */
 
 /* These should remain as // (valid code) */

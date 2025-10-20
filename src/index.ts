@@ -102,8 +102,15 @@ const commentStyleRule: Rule.RuleModule = {
     return {
       Program(): void {
         const comments = sourceCode.getAllComments();
+        const processedComments = new Set<(typeof comments)[number]>();
 
-        for (const comment of comments) {
+        for (let i = 0; i < comments.length; i++) {
+          const comment = comments[i];
+
+          if (!comment || processedComments.has(comment)) {
+            continue;
+          }
+
           const commentText = comment.value;
           const isCode = isCommentedCode(commentText);
 
@@ -116,7 +123,7 @@ const commentStyleRule: Rule.RuleModule = {
                 const lines = commentText.split('\n');
                 const startLine = comment.loc!.start.line;
 
-                /* Get indentation from the first line */
+                /* Get indentation from the first comment */
                 const sourceLines = sourceCode.lines;
                 const commentLineIndex = startLine - 1;
                 const commentLine = sourceLines[commentLineIndex] || '';
@@ -149,18 +156,96 @@ const commentStyleRule: Rule.RuleModule = {
               continue;
             }
 
-            context.report({
-              loc: comment.loc!,
-              messageId: 'useMultiLineForText',
-              fix(fixer) {
-                const replacement = `/* ${text} */`;
+            /* Check for consecutive single-line comments */
+            const consecutiveComments = [comment];
+            processedComments.add(comment);
 
-                return fixer.replaceTextRange(
-                  [comment.range![0], comment.range![1]],
-                  replacement,
-                );
-              },
-            });
+            for (let j = i + 1; j < comments.length; j++) {
+              const nextComment = comments[j];
+
+              if (!nextComment || nextComment.type !== 'Line') {
+                break;
+              }
+
+              const nextIsCode = isCommentedCode(nextComment.value);
+              if (nextIsCode) {
+                break;
+              }
+
+              // Check if the next comment contains */ which would break multi-line syntax
+              if (nextComment.value.trim().includes('*/')) {
+                break;
+              }
+
+              /* Check if comments are on consecutive lines (no empty lines between) */
+              const lastConsecutive =
+                consecutiveComments[consecutiveComments.length - 1];
+              if (!lastConsecutive) break;
+
+              const currentLine = lastConsecutive.loc!.end.line;
+              const nextLine = nextComment.loc!.start.line;
+
+              if (nextLine === currentLine + 1) {
+                consecutiveComments.push(nextComment);
+                processedComments.add(nextComment);
+              } else {
+                break;
+              }
+            }
+
+            /* If we have multiple consecutive comments, merge them into a block comment */
+            if (consecutiveComments.length > 1) {
+              const firstComment = consecutiveComments[0];
+              const lastComment =
+                consecutiveComments[consecutiveComments.length - 1];
+
+              if (!firstComment || !lastComment) continue;
+
+              /* Get indentation from the first comment */
+              const sourceLines = sourceCode.lines;
+              const commentLineIndex = firstComment.loc!.start.line - 1;
+              const commentLine = sourceLines[commentLineIndex] || '';
+              const match = /^(\s*)/.exec(commentLine);
+              const baseIndent = match ? match[1] : '';
+
+              context.report({
+                loc: {
+                  start: firstComment.loc!.start,
+                  end: lastComment.loc!.end,
+                },
+                messageId: 'useMultiLineForText',
+                fix(fixer) {
+                  const lines = consecutiveComments
+                    .map((c) => c?.value.trim() || '')
+                    .filter((l) => l);
+                  const blockLines = [
+                    '/*',
+                    ...lines.map((line) => ` * ${line}`),
+                    ' */',
+                  ];
+                  const replacement = blockLines.join(`\n${baseIndent}`);
+
+                  return fixer.replaceTextRange(
+                    [firstComment.range![0], lastComment.range![1]],
+                    replacement,
+                  );
+                },
+              });
+            } else {
+              /* Single comment - convert to single-line block comment */
+              context.report({
+                loc: comment.loc!,
+                messageId: 'useMultiLineForText',
+                fix(fixer) {
+                  const replacement = `/* ${text} */`;
+
+                  return fixer.replaceTextRange(
+                    [comment.range![0], comment.range![1]],
+                    replacement,
+                  );
+                },
+              });
+            }
           }
         }
       },

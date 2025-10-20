@@ -34,7 +34,7 @@ const eslint = new ESLint({
 
 describe('eslint-plugin-consistent-comments', () => {
   describe('auto-fix', () => {
-    it('should lint the case-one file', async () => {
+    it('should correctly lint the case-one file', async () => {
       expect.assertions(1);
 
       const filePathToTest = join(fixturesDir, 'case-one.ts');
@@ -45,11 +45,25 @@ describe('eslint-plugin-consistent-comments', () => {
       await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
     });
 
-    it('should lint the edge-case file', async () => {
+    it('should correctly lint the edge-case file', async () => {
       expect.assertions(1);
 
       const filePathToTest = join(fixturesDir, 'edge-case.ts');
       const filePathToFixed = join(fixturesDir, 'edge-case-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the multi-line-block-cases file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'multi-line-block-cases.ts');
+      const filePathToFixed = join(
+        fixturesDir,
+        'multi-line-block-cases-fixed.ts',
+      );
 
       const results = await eslint.lintFiles([filePathToTest]);
 
