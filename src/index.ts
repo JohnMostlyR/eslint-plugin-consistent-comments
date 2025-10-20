@@ -15,8 +15,9 @@ import * as espree from 'espree';
  * 1. First, try parsing as a complete program
  * 2. If successful, check if it's just a single identifier (which is text, not code)
  * 3. If that fails, try parsing as an expression (wrapped in parentheses)
- * 4. If that fails, try parsing as a statement (wrapped in a function)
- * 5. If all parsing attempts fail, it's considered text, not code
+ * 4. If that fails, try parsing as an object property (wrapped in object literal)
+ * 5. If that fails, try parsing as a statement (wrapped in a function)
+ * 6. If all parsing attempts fail, it's considered text, not code
  *
  * @param text - The comment text to analyze
  * @returns true if the comment appears to contain valid code
@@ -72,17 +73,26 @@ function isCommentedCode(text: string): boolean {
       espree.parse(`(${trimmed})`, parserOptions);
       return true;
     } catch (expressionError) {
-      /* Also try common statement patterns that might not parse standalone */
+      /* Try parsing as an object property (handles cases like "key: value,") */
       try {
-        /* Try wrapping in a function to see if it's a valid statement */
-        espree.parse(`function _test() { ${trimmed} }`, {
+        espree.parse(`({${trimmed}})`, {
           ecmaVersion: 'latest',
           sourceType: 'module',
         });
         return true;
-      } catch {
-        /* Not valid code in any form */
-        return false;
+      } catch (objectError) {
+        /* Also try common statement patterns that might not parse standalone */
+        try {
+          /* Try wrapping in a function to see if it's a valid statement */
+          espree.parse(`function _test() { ${trimmed} }`, {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+          });
+          return true;
+        } catch {
+          /* Not valid code in any form */
+          return false;
+        }
       }
     }
   }

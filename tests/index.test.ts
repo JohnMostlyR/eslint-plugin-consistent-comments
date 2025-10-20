@@ -93,6 +93,43 @@ describe('eslint-plugin-consistent-comments', () => {
         ],
       });
     });
+
+    it('should detect object properties as code', () => {
+      ruleTester.run('comment-style', rule, {
+        valid: [
+          {
+            // Object property with trailing comma should be detected as code
+            code: '// key: value,',
+            filename: 'test.ts',
+          },
+          {
+            // Complex object property with method calls
+            code: '// ELECTRON_CLERK_PUBLISHABLE_KEY: z.string().min(1),',
+            filename: 'test.ts',
+          },
+          {
+            // Object property without trailing comma
+            code: '// port: 3000',
+            filename: 'test.ts',
+          },
+        ],
+        invalid: [
+          {
+            // Object property in block comment should be converted to single-line
+            code: '/* key: value, */',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useSlashForCode' }],
+            output: '// key: value,',
+          },
+          {
+            code: '/* ELECTRON_CLERK_PUBLISHABLE_KEY: z.string().min(1), */',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useSlashForCode' }],
+            output: '// ELECTRON_CLERK_PUBLISHABLE_KEY: z.string().min(1),',
+          },
+        ],
+      });
+    });
   });
 
   describe('edge cases', () => {
