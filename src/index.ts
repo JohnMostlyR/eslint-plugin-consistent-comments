@@ -13,9 +13,10 @@ import * as espree from 'espree';
  *
  * Strategy:
  * 1. First, try parsing as a complete program
- * 2. If that fails, try parsing as an expression (wrapped in parentheses)
- * 3. If that fails, try parsing as a statement (wrapped in a function)
- * 4. If all parsing attempts fail, it's considered text, not code
+ * 2. If successful, check if it's just a single identifier (which is text, not code)
+ * 3. If that fails, try parsing as an expression (wrapped in parentheses)
+ * 4. If that fails, try parsing as a statement (wrapped in a function)
+ * 5. If all parsing attempts fail, it's considered text, not code
  *
  * @param text - The comment text to analyze
  * @returns true if the comment appears to contain valid code
@@ -39,7 +40,21 @@ function isCommentedCode(text: string): boolean {
     };
 
     /* Attempt to parse as a complete program */
-    espree.parse(trimmed, parserOptions);
+    const ast = espree.parse(trimmed, parserOptions);
+
+    /*
+     * If the parsed program is just a single identifier (e.g., "Electron", "TODO"),
+     * treat it as text rather than code. Single identifiers are typically section
+     * labels or category headers, not commented-out code.
+     */
+    if (
+      ast.body.length === 1 &&
+      ast.body[0]?.type === 'ExpressionStatement' &&
+      ast.body[0].expression.type === 'Identifier'
+    ) {
+      return false;
+    }
+
     return true;
   } catch (programError) {
     /* If it fails as a program, try parsing as an expression */

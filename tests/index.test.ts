@@ -189,6 +189,49 @@ describe('eslint-plugin-consistent-comments', () => {
         invalid: [],
       });
     });
+
+    it('should treat single identifiers as text, not code', () => {
+      ruleTester.run('comment-style', rule, {
+        valid: [
+          {
+            // Single word identifiers should be treated as section labels/text
+            code: '/* Electron */',
+            filename: 'test.ts',
+          },
+          {
+            code: '/* TODO */',
+            filename: 'test.ts',
+          },
+          {
+            code: '/* Button */',
+            filename: 'test.ts',
+          },
+          {
+            code: '/* Component */',
+            filename: 'test.ts',
+          },
+          {
+            code: '/* API */',
+            filename: 'test.ts',
+          },
+        ],
+        invalid: [
+          {
+            // Single identifiers in single-line comments should be converted to multi-line
+            code: '// Electron',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useMultiLineForText' }],
+            output: '/* Electron */',
+          },
+          {
+            code: '// TODO',
+            filename: 'test.ts',
+            errors: [{ messageId: 'useMultiLineForText' }],
+            output: '/* TODO */',
+          },
+        ],
+      });
+    });
   });
 
   describe('plugin configuration', () => {
