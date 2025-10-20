@@ -98,24 +98,24 @@ describe('eslint-plugin-consistent-comments', () => {
       ruleTester.run('comment-style', rule, {
         valid: [
           {
-            // Object property with trailing comma should be detected as code
+            /* Object property with trailing comma should be detected as code */
             code: '// key: value,',
             filename: 'test.ts',
           },
           {
-            // Complex object property with method calls
+            /* Complex object property with method calls */
             code: '// ELECTRON_CLERK_PUBLISHABLE_KEY: z.string().min(1),',
             filename: 'test.ts',
           },
           {
-            // Object property without trailing comma
+            /* Object property without trailing comma */
             code: '// port: 3000',
             filename: 'test.ts',
           },
         ],
         invalid: [
           {
-            // Object property in block comment should be converted to single-line
+            /* Object property in block comment should be converted to single-line */
             code: '/* key: value, */',
             filename: 'test.ts',
             errors: [{ messageId: 'useSlashForCode' }],
@@ -152,7 +152,8 @@ describe('eslint-plugin-consistent-comments', () => {
             code: '// eslint-disable-next-line no-unused-vars',
             filename: 'test.ts',
           },
-          // Additional directive variations
+
+          /* Additional directive variations */
           {
             code: '  //   @ts-expect-error  ',
             filename: 'test.ts',
@@ -208,17 +209,17 @@ describe('eslint-plugin-consistent-comments', () => {
       ruleTester.run('comment-style', rule, {
         valid: [
           {
-            // Using a NBSP (U+00A0) before a directive should still be considered a directive
+            /* Using a NBSP (U+00A0) before a directive should still be considered a directive */
             code: '//\u00A0@ts-ignore use NBSP before directive',
             filename: 'test.ts',
           },
           {
-            // Template literal containing comment-like content should not be interpreted as comments
+            /* Template literal containing comment-like content should not be interpreted as comments */
             code: 'const tpl = `/* not a comment */\n// not a comment inside string`;',
             filename: 'test.ts',
           },
           {
-            // A multi-line block that contains a directive and explanatory text should remain a block
+            /* A multi-line block that contains a directive and explanatory text should remain a block */
             code: `/*\n * prettier-ignore\n * Keep this block as documentation and directive together\n */`,
             filename: 'test.ts',
           },
@@ -231,7 +232,7 @@ describe('eslint-plugin-consistent-comments', () => {
       ruleTester.run('comment-style', rule, {
         valid: [
           {
-            // Single word identifiers should be treated as section labels/text
+            /* Single word identifiers should be treated as section labels/text */
             code: '/* Electron */',
             filename: 'test.ts',
           },
@@ -254,7 +255,7 @@ describe('eslint-plugin-consistent-comments', () => {
         ],
         invalid: [
           {
-            // Single identifiers in single-line comments should be converted to multi-line
+            /* Single identifiers in single-line comments should be converted to multi-line */
             code: '// Electron',
             filename: 'test.ts',
             errors: [{ messageId: 'useMultiLineForText' }],
@@ -274,7 +275,7 @@ describe('eslint-plugin-consistent-comments', () => {
   describe('plugin configuration', () => {
     it('should have correct metadata', () => {
       expect(plugin.meta?.name).toBe('eslint-plugin-consistent-comments');
-      expect(plugin.meta?.version).toBe('1.2.0');
+      expect(plugin.meta?.version).toBe('1.3.0');
     });
 
     it('should have comment-style rule', () => {
