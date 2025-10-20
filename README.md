@@ -9,8 +9,10 @@ An ESLint plugin that automatically detects and enforces the appropriate comment
 
 ## ✨ Features
 
-- 🤖 **Smart Detection** - Automatically identifies code vs. documentation in comments
+- 🤖 **Smart Detection** - Automatically identifies code vs. documentation in comments using AST parsing
 - 🔧 **Auto-fix** - Converts comments to the correct style with `eslint --fix`
+- 📝 **Smart Merging** - Consecutive single-line text comments are merged into multi-line block format
+- 🛡️ **Safe Conversion** - Avoids breaking comments that contain `*/` in their text
 - 📦 **ESLint 9.x** - Compatible with modern flat config format
 - 🎯 **TypeScript & JavaScript** - Works with both languages
 - ⚡ **Zero Config** - Works out of the box with sensible defaults
@@ -74,9 +76,31 @@ This plugin enforces:
 /* This explains the function below */ // ✅ Text in multi-line
 ```
 
+### Consecutive Comment Merging
+
+When multiple single-line text comments appear consecutively (without empty lines), they're automatically merged into a multi-line block comment:
+
+**Before:**
+
+```typescript
+// This is a documentation comment
+// that spans multiple lines
+// for better readability
+```
+
+**After:**
+
+```typescript
+/*
+ * This is a documentation comment
+ * that spans multiple lines
+ * for better readability
+ */
+```
+
 ### What Gets Detected as Code?
 
-The plugin recognizes these patterns as code:
+The plugin uses **AST (Abstract Syntax Tree) parsing** to accurately detect code, not just regex patterns. It recognizes:
 
 - **Declarations**: `const`, `let`, `var`, `function`, `class`, `interface`, `type`, `enum`
 - **Control Flow**: `if`, `else`, `for`, `while`, `switch`, `return`, `throw`
@@ -87,6 +111,30 @@ The plugin recognizes these patterns as code:
 - **Data Structures**: Arrays `[...]`, objects `{...}`
 - **Type Annotations**: `: string`, `: number`
 - **JSX**: `<Component />`
+- **Expressions**: `true`, `42`, `"string"`, object/array literals
+
+### Special Cases & Safety
+
+The plugin intelligently handles edge cases:
+
+#### Comments containing `*/`
+
+Comments that contain `*/` in their text are **not converted** to multi-line format to avoid breaking syntax:
+
+```typescript
+// These should NOT be converted to /* */ (results in invalid code)
+// ✅ Stays as single-line comment to prevent syntax errors
+```
+
+#### Triple-slash directives
+
+TypeScript directives and special comment forms are preserved:
+
+```typescript
+/// <reference types="node" />           // ✅ Not converted
+// @ts-ignore: special case              // ✅ Not converted
+// eslint-disable-next-line no-unused-vars // ✅ Not converted
+```
 
 ## 📋 Examples
 
@@ -96,7 +144,7 @@ The plugin recognizes these patterns as code:
 /* const x = 5; */
 /* function test() { return true; } */
 // This is a documentation comment
-// Regular explanation text
+// that spans multiple lines
 
 /*
   const multiple = 'lines';
@@ -109,8 +157,10 @@ The plugin recognizes these patterns as code:
 ```typescript
 // const x = 5;
 // function test() { return true; }
-/* This is a documentation comment */
-/* Regular explanation text */
+/*
+ * This is a documentation comment
+ * that spans multiple lines
+ */
 
 // const multiple = 'lines';
 // const of = 'code';
@@ -230,12 +280,31 @@ MIT © [Johan Meester](https://github.com/JohnMostlyR)
 - [ESLint](https://eslint.org/) - Pluggable JavaScript linter
 - [typescript-eslint](https://typescript-eslint.io/) - TypeScript support for ESLint
 
+## 🎯 How It Works
+
+The plugin uses a sophisticated approach to distinguish between code and text:
+
+1. **AST Parsing**: Uses `espree` (ESLint's parser) to attempt parsing comment content as JavaScript/TypeScript
+2. **Multiple Parse Attempts**: Tries parsing as:
+   - Complete program (statements)
+   - Expression (wrapped in parentheses)
+   - Statement (wrapped in a function body)
+3. **Accurate Detection**: If the content parses successfully, it's code; otherwise, it's text
+4. **Consecutive Grouping**: Merges consecutive single-line text comments into multi-line blocks
+5. **Safety First**: Skips conversion when it would create invalid syntax
+
+This approach is far more reliable than regex patterns and handles edge cases like:
+
+- `/* true */` → `// true` (valid code, single boolean value)
+- `/* This is true */` → stays as `/* This is true */` (text, not code)
+
 ## 💡 Inspiration
 
 This plugin was created to enforce a consistent commenting style that makes it easier to:
 
 - Distinguish between commented-out code (temporary, should be reviewed/removed)
 - Documentation comments (permanent, explains intent)
+- Keep documentation organized in proper multi-line block format
 
 ## 📚 Further Reading
 
