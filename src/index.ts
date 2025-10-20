@@ -105,43 +105,6 @@ const commentStyleRule: Rule.RuleModule = {
 
         for (const comment of comments) {
           const commentText = comment.value;
-          const raw =
-            comment.range &&
-            sourceCode.text.slice(comment.range[0], comment.range[1]);
-
-          /*
-           * Don't touch triple-slash directives (e.g. /// <reference ... />)
-           * or directive-like comments such as @ts-ignore, eslint-disable,
-           * prettier-ignore, istanbul ignore, etc.
-           */
-          const trimmedRaw = raw ? raw.trimStart() : '';
-
-          if (trimmedRaw.startsWith('///')) continue;
-
-          /*
-           * Detect directive-like comments in both line (// ...) and block (slash-star ... star-slash)
-           * forms. The regex matches common directive prefixes used by TypeScript, ESLint,
-           * Prettier, Istanbul/coverage tools, Deno, TSLint, and similar. It allows optional
-           * spacing and is case-insensitive.
-           */
-          const directiveBody =
-            '(?:@ts-ignore\\b|@ts-expect-error\\b|ts-?nocheck\\b|tslint:|eslint(?:-(?:disable|enable)(?:-next-line|-line)?)?\\b|eslint-?env\\b|prettier-ignore\\b|istanbul(?:\\s+ignore(?:[-\\s]next|\\b))?\\b|deno-lint-ignore\\b)';
-
-          const lineDirectiveRe = new RegExp(
-            '^\\/\\/\\s*' + directiveBody,
-            'i',
-          );
-          const blockDirectiveRe = new RegExp(
-            '^\\/\\*+\\s*' + directiveBody,
-            'i',
-          );
-
-          if (
-            lineDirectiveRe.test(trimmedRaw) ||
-            blockDirectiveRe.test(trimmedRaw)
-          )
-            continue;
-
           const isCode = isCommentedCode(commentText);
 
           if (comment.type === 'Block' && isCode) {
