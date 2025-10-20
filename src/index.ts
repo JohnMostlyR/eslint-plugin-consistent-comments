@@ -142,11 +142,17 @@ const commentStyleRule: Rule.RuleModule = {
             });
           } else if (comment.type === 'Line' && !isCode) {
             /* Single-line comment with non-code text - should be multi-line */
+            const text = commentText.trim();
+
+            // Skip conversion if the comment contains */ which would break multi-line syntax
+            if (text.includes('*/')) {
+              continue;
+            }
+
             context.report({
               loc: comment.loc!,
               messageId: 'useMultiLineForText',
               fix(fixer) {
-                const text = commentText.trim();
                 const replacement = `/* ${text} */`;
 
                 return fixer.replaceTextRange(
