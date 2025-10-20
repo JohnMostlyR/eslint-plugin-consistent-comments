@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
@@ -68,6 +69,21 @@ describe('eslint-plugin-consistent-comments', () => {
       const results = await eslint.lintFiles([filePathToTest]);
 
       await expect(results[0]!.output).toMatchFileSnapshot(filePathToFixed);
+    });
+
+    it('should correctly lint the triple-slash file', async () => {
+      expect.assertions(1);
+
+      const filePathToTest = join(fixturesDir, 'triple-slash.ts');
+      const filePathToFixed = join(fixturesDir, 'triple-slash-fixed.ts');
+
+      const results = await eslint.lintFiles([filePathToTest]);
+
+      // If no fixes were applied, output will be undefined, so read the original file
+      const actualOutput =
+        results[0]!.output ?? (await readFile(filePathToTest, 'utf-8'));
+
+      await expect(actualOutput).toMatchFileSnapshot(filePathToFixed);
     });
   });
 });

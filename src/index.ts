@@ -156,6 +156,12 @@ const commentStyleRule: Rule.RuleModule = {
               continue;
             }
 
+            // Skip triple-slash directives (e.g., /// <reference types="..." />)
+            // These are TypeScript compiler directives that must remain as ///
+            if (commentText.startsWith('/')) {
+              continue;
+            }
+
             /* Check for consecutive single-line comments */
             const consecutiveComments = [comment];
             processedComments.add(comment);

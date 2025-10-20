@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
@@ -53,7 +53,10 @@ for (const result of results) {
 
   console.info('');
   console.debug('📝 Writing output file:', outputPath);
-  await writeFile(outputPath, result.output ?? '');
+
+  // If no fixes were applied, output will be undefined, so use the original file content
+  const content = result.output ?? (await readFile(result.filePath, 'utf-8'));
+  await writeFile(outputPath, content);
 }
 
 console.info('');
