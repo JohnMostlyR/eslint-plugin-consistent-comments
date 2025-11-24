@@ -58,7 +58,7 @@
     "@vitest/coverage-v8": "3.2.4",
     "eslint": "9.38.0",
     "eslint-plugin-sonarjs": "3.0.5",
-    "espree": "10.4.0",
+    "espree": "11.0.0",
     "glob": "11.0.3",
     "jiti": "^2.6.1",
     "prettier": "3.6.2",
