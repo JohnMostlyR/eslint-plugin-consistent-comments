@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Get pnpm store directory
         shell: bash
@@ -53,10 +53,13 @@ jobs:
         run: pnpm lint
 
       - name: Check formatting
-        run: pnpm format --check
+        run: pnpm format
 
       - name: Run type checking
         run: pnpm typecheck
 
       - name: Run tests
         run: pnpm test
+
+      - name: Build
+        run: pnpm build
