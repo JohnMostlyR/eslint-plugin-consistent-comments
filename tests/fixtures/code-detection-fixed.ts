@@ -36,8 +36,8 @@
 // const obj = { key: 'value' };
 
 /* Type annotations (TypeScript) */
-/* type User = { name: string }; */
-/* interface Config { port: number; } */
+// type User = { name: string };
+// interface Config { port: number; }
 
 /* Class declarations */
 // class MyClass { constructor() {} }

@@ -12,12 +12,13 @@ import * as espree from 'espree';
  * - Complex code patterns (e.g., arrow functions, object/array literals)
  *
  * Strategy:
- * 1. First, try parsing as a complete program
- * 2. If successful, check if it's just a single identifier (which is text, not code)
- * 3. If that fails, try parsing as an expression (wrapped in parentheses)
- * 4. If that fails, try parsing as an object property (wrapped in object literal)
- * 5. If that fails, try parsing as a statement (wrapped in a function)
- * 6. If all parsing attempts fail, it's considered text, not code
+ * 1. First, check for TypeScript-specific syntax patterns
+ * 2. Try parsing as a complete program
+ * 3. If successful, check if it's just a single identifier (which is text, not code)
+ * 4. If that fails, try parsing as an expression (wrapped in parentheses)
+ * 5. If that fails, try parsing as an object property (wrapped in object literal)
+ * 6. If that fails, try parsing as a statement (wrapped in a function)
+ * 7. If all parsing attempts fail, it's considered text, not code
  *
  * @param text - The comment text to analyze
  * @returns true if the comment appears to contain valid code
@@ -27,6 +28,26 @@ function isCommentedCode(text: string): boolean {
 
   /* Empty comments are not code */
   if (!trimmed) return false;
+
+  /*
+   * Check for TypeScript-specific syntax patterns that won't parse with espree.
+   * These patterns indicate commented-out TypeScript code:
+   * - Generic type syntax: Array<T>, Map<K, V>, etc.
+   * - Type annotations: variableName: Type
+   * - Interface/type property definitions: propertyName: Type;
+   * - Type keywords: interface, type, enum, namespace, declare
+   */
+  const typeScriptPatterns = [
+    /\w+<[\w\s,\[\]]+>/, // Generic types: Array<string>, Map<K, V>
+    /\w+:\s*\w+<[\w\s,\[\]]+>/, // Properties with generic types: prop: Array<number>
+    /^\s*(interface|type|enum|namespace|declare)\s+\w+/, // Type keywords at start
+    /:\s*(string|number|boolean|any|unknown|never|void|object)\s*[;,\)\}]/, // Type annotations
+    /:\s*\w+\[\]\s*[;,\)\}]/, // Array type syntax: Type[]
+  ];
+
+  if (typeScriptPatterns.some((pattern) => pattern.test(trimmed))) {
+    return true;
+  }
 
   /* Try to parse the uncommented text as JavaScript code */
   try {
