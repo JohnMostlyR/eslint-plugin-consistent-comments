@@ -55,7 +55,7 @@
     "@types/espree": "^10.1.0",
     "@types/estree": "1.0.8",
     "@types/node": "24.10.1",
-    "@vitest/coverage-v8": "4.0.13",
+    "@vitest/coverage-v8": "4.0.15",
     "eslint": "9.39.1",
     "eslint-plugin-sonarjs": "3.0.5",
     "espree": "11.0.0",
@@ -65,7 +65,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.48.0",
     "unbuild": "3.6.1",
-    "vitest": "4.0.13"
+    "vitest": "4.0.15"
   },
   "peerDependencies": {
     "eslint": ">=9.0.0"
