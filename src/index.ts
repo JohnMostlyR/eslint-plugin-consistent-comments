@@ -12,13 +12,14 @@ import * as espree from 'espree';
  * - Complex code patterns (e.g., arrow functions, object/array literals)
  *
  * Strategy:
- * 1. First, check for TypeScript-specific syntax patterns
- * 2. Try parsing as a complete program
- * 3. If successful, check if it's just a single identifier (which is text, not code)
- * 4. If that fails, try parsing as an expression (wrapped in parentheses)
- * 5. If that fails, try parsing as an object property (wrapped in object literal)
- * 6. If that fails, try parsing as a statement (wrapped in a function)
- * 7. If all parsing attempts fail, it's considered text, not code
+ * 1. First, check if it's JSDoc documentation
+ * 2. Check for TypeScript-specific syntax patterns
+ * 3. Try parsing as a complete program
+ * 4. If successful, check if it's just a single identifier (which is text, not code)
+ * 5. If that fails, try parsing as an expression (wrapped in parentheses)
+ * 6. If that fails, try parsing as an object property (wrapped in object literal)
+ * 7. If that fails, try parsing as a statement (wrapped in a function)
+ * 8. If all parsing attempts fail, it's considered text, not code
  *
  * @param text - The comment text to analyze
  * @returns true if the comment appears to contain valid code
@@ -28,6 +29,22 @@ function isCommentedCode(text: string): boolean {
 
   /* Empty comments are not code */
   if (!trimmed) return false;
+
+  /*
+   * Check if this is JSDoc documentation (contains @ tags like @param, @returns, etc.)
+   * JSDoc comments are documentation, not commented-out code.
+   * We check for common JSDoc patterns that indicate this is documentation.
+   */
+  const jsdocIndicators = [
+    /\*\s*@\w+/, // Multi-line JSDoc: * @param, * @returns, etc.
+    /@param\s*\{/, // @param with type annotation
+    /@returns?\s*\{/, // @returns with type annotation
+    /@(throws|author|copyright|deprecated|since|example|see|link|name|module|namespace|description|summary)\b/, // Other common JSDoc tags
+  ];
+
+  if (jsdocIndicators.some((pattern) => pattern.test(trimmed))) {
+    return false;
+  }
 
   /*
    * Check for TypeScript-specific syntax patterns that won't parse with espree.
@@ -308,7 +325,7 @@ const commentStyleRule: Rule.RuleModule = {
 const plugin: ESLint.Plugin = {
   meta: {
     name: 'eslint-plugin-consistent-comments',
-    version: '1.4.0',
+    version: '1.4.1',
   },
   configs: {
     recommended: {
