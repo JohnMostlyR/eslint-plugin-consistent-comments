@@ -41,7 +41,7 @@
     "build": "unbuild",
     "clean": "git clean -xdf .cache dist node_modules",
     "coverage": "vitest run --coverage",
-    "format": "prettier --write .",
+    "format": "prettier . --write --list-different",
     "debug": "jiti ./debug/test.ts",
     "lint": "eslint --fix .",
     "test": "vitest run",
