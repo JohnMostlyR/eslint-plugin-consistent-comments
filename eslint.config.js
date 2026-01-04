@@ -4,6 +4,8 @@ import { includeIgnoreFile } from '@eslint/compat';
 import sonarjs from 'eslint-plugin-sonarjs';
 import tseslint from 'typescript-eslint';
 
+import commentsPlugin from './dist/index.mjs';
+
 const GITIGNORE_PATH = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   '.gitignore',
@@ -14,7 +16,6 @@ const GITIGNORE_PATH = path.join(
  */
 export const config = [
   includeIgnoreFile(GITIGNORE_PATH),
-  sonarjs.configs.recommended,
   {
     languageOptions: {
       parser: tseslint.parser,
@@ -23,6 +24,27 @@ export const config = [
         projectService: false,
         sourceType: 'module',
       },
+    },
+    plugins: {
+      comments: commentsPlugin,
+      sonarjs,
+    },
+    rules: {
+      'comments/comment-style': 'error',
+    },
+  },
+  {
+    name: 'typescript',
+    files: ['src/**/*.ts'],
+  },
+  {
+    name: 'tests',
+
+    files: ['tests/*.ts'],
+    ignores: ['tests/fixtures/**'],
+    rules: {
+      'sonarjs/no-empty-group': 'off',
+      'sonarjs/no-nested-functions': 'off',
     },
   },
 ];
