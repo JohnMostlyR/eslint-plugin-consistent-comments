@@ -19,7 +19,16 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["ianvs", "mkdist", "sonarjs", "tapjs", "transpiles"],
+  "cSpell.words": [
+    "ianvs",
+    "mkdist",
+    "NOLINT",
+    "noqa",
+    "NOSONAR",
+    "sonarjs",
+    "tapjs",
+    "transpiles"
+  ],
   "debug.javascript.terminalOptions": {
     "resolveSourceMapLocations": [
       "${workspaceFolder}/**",

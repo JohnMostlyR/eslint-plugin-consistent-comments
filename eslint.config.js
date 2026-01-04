@@ -14,7 +14,6 @@ const GITIGNORE_PATH = path.join(
  */
 export const config = [
   includeIgnoreFile(GITIGNORE_PATH),
-  sonarjs.configs.recommended,
   {
     languageOptions: {
       parser: tseslint.parser,
@@ -23,6 +22,22 @@ export const config = [
         projectService: false,
         sourceType: 'module',
       },
+    },
+    plugins: {
+      sonarjs,
+    },
+  },
+  {
+    name: 'typescript',
+    files: ['src/**/*.ts'],
+  },
+  {
+    name: 'tests',
+    files: ['tests/*.ts'],
+    ignores: ['tests/fixtures/**'],
+    rules: {
+      'sonarjs/no-empty-group': 'off',
+      'sonarjs/no-nested-functions': 'off',
     },
   },
 ];

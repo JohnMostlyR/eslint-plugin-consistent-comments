@@ -2,6 +2,48 @@ import type { ESLint, Rule } from 'eslint';
 import * as espree from 'espree';
 
 /**
+ * Detects if a comment is a directive (special comment that controls code behavior).
+ * Directives should not be converted between comment styles.
+ *
+ * Common directives include:
+ * - TypeScript directives: @ts-ignore, @ts-expect-error, @ts-nocheck, @ts-check
+ * - ESLint directives: eslint-disable, eslint-enable, eslint-disable-next-line
+ * - Prettier directives: prettier-ignore, prettier-ignore-start, prettier-ignore-end
+ * - Istanbul directives: istanbul ignore, istanbul skip, istanbul ign
+ * - Deno directives: deno-lint-ignore, deno-fmt-ignore
+ * - Other directives: NOLINT, noqa, NOSONAR, pragma, etc.
+ *
+ * @param text - The comment text to analyze
+ * @returns true if the comment is a directive
+ */
+function isDirective(text: string): boolean {
+  const trimmed = text.trim();
+
+  /* List of directive patterns - these must be exact matches or followed by whitespace/punctuation */
+  const directivePatterns = [
+    /* TypeScript directives */
+    /@ts-(ignore|expect-error|nocheck|check)(\s|$|:)/i,
+
+    /* ESLint directives - must be followed by word boundary or space */
+    /^eslint-(disable|enable)(\s|$|-)/i,
+
+    /* Prettier directives */
+    /^prettier-ignore(\s|$|-)/i,
+
+    /* Istanbul directives */
+    /^istanbul\s+(ignore|skip|ign)(\s|$)/i,
+
+    /* Deno directives */
+    /^deno-(lint-ignore|fmt-ignore)(\s|$)/i,
+
+    /* Other common directives */
+    /^(NOLINT|noqa|NOSONAR|pragma)\b/i,
+  ];
+
+  return directivePatterns.some((pattern) => pattern.test(trimmed));
+}
+
+/**
  * Detects if a comment contains code by attempting to parse it as JavaScript/TypeScript.
  *
  * This function uses AST parsing instead of regex patterns to accurately determine
@@ -36,10 +78,12 @@ function isCommentedCode(text: string): boolean {
    * We check for common JSDoc patterns that indicate this is documentation.
    */
   const jsdocIndicators = [
-    /\*\s*@\w+/, // Multi-line JSDoc: * @param, * @returns, etc.
-    /@param\s*\{/, // @param with type annotation
-    /@returns?\s*\{/, // @returns with type annotation
-    /@(throws|author|copyright|deprecated|since|example|see|link|name|module|namespace|description|summary)\b/, // Other common JSDoc tags
+    /\*\s*@\w+/ /*
+     * Multi-line JSDoc: * @param, * @returns, etc.
+     * @param with type annotation
+     * @returns with type annotation
+     * Other common JSDoc tags
+     */,
   ];
 
   if (jsdocIndicators.some((pattern) => pattern.test(trimmed))) {
@@ -47,19 +91,23 @@ function isCommentedCode(text: string): boolean {
   }
 
   /*
-   * Check for TypeScript-specific syntax patterns that won't parse with espree.
-   * These patterns indicate commented-out TypeScript code:
-   * - Generic type syntax: Array<T>, Map<K, V>, etc.
-   * - Type annotations: variableName: Type
-   * - Interface/type property definitions: propertyName: Type;
-   * - Type keywords: interface, type, enum, namespace, declare
+   * * Check for TypeScript-specific syntax patterns that won't parse with espree.
+   * * These patterns indicate commented-out TypeScript code:
+   */
+  // * - Generic type syntax: Array<T>, Map<K, V>, etc.
+  /*
+   * * - Type annotations: variableName: Type
+   * * - Interface/type property definitions: propertyName: Type;
+   * * - Type keywords: interface, type, enum, namespace, declare
    */
   const typeScriptPatterns = [
     /\w+<[\w\s,\[\]]+>/, // Generic types: Array<string>, Map<K, V>
     /\w+:\s*\w+<[\w\s,\[\]]+>/, // Properties with generic types: prop: Array<number>
-    /^\s*(interface|type|enum|namespace|declare)\s+\w+/, // Type keywords at start
-    /:\s*(string|number|boolean|any|unknown|never|void|object)\s*[;,\)\}]/, // Type annotations
-    /:\s*\w+\[\]\s*[;,\)\}]/, // Array type syntax: Type[]
+    /^\s*(interface|type|enum|namespace|declare)\s+\w+/ /*
+     * Type keywords at start
+     * Type annotations
+     * Array type syntax: Type[]
+     */,
   ];
 
   if (typeScriptPatterns.some((pattern) => pattern.test(trimmed))) {
@@ -176,9 +224,12 @@ const commentStyleRule: Rule.RuleModule = {
 
           const commentText = comment.value;
           const isCode = isCommentedCode(commentText);
+          const isCommentDirective = isDirective(commentText);
 
-          if (comment.type === 'Block' && isCode) {
+          if (comment.type === 'Block' && isCode && !isCommentDirective) {
             /* Multi-line comment containing code - should be single-line */
+            /* But skip directives - they should stay as-is or be single-line */
+
             context.report({
               loc: comment.loc!,
               messageId: 'useSlashForCode',
@@ -210,6 +261,30 @@ const commentStyleRule: Rule.RuleModule = {
                 );
               },
             });
+          } else if (comment.type === 'Block' && isCommentDirective) {
+            /* Multi-line comment containing a directive - convert to single-line */
+            /* But only if it's a simple single-line directive, not a multi-line block */
+            const lines = commentText.split('\n');
+
+            /* If it's a multi-line comment block, don't convert it */
+            /* Multi-line blocks typically have multiple lines or extra formatting */
+            if (lines.length > 1) {
+              continue;
+            }
+
+            context.report({
+              loc: comment.loc!,
+              messageId: 'useSlashForCode',
+              fix(fixer) {
+                const text = commentText.trim();
+                const replacement = `// ${text}`;
+
+                return fixer.replaceTextRange(
+                  [comment.range![0], comment.range![1]],
+                  replacement,
+                );
+              },
+            });
           } else if (comment.type === 'Line' && !isCode) {
             /* Single-line comment with non-code text - should be multi-line */
             const text = commentText.trim();
@@ -219,9 +294,19 @@ const commentStyleRule: Rule.RuleModule = {
               continue;
             }
 
-            // Skip triple-slash directives (e.g., /// <reference types="..." />)
-            // These are TypeScript compiler directives that must remain as ///
+            /*
+             * Skip triple-slash directives (e.g., /// <reference types="..." />)
+             * These are TypeScript compiler directives that must remain as ///
+             */
             if (commentText.startsWith('/')) {
+              continue;
+            }
+
+            /*
+             * Skip directives (like @ts-ignore, eslint-disable, prettier-ignore, etc.)
+             * These are special comments that control code behavior and should not be converted
+             */
+            if (isDirective(commentText)) {
               continue;
             }
 
@@ -325,7 +410,7 @@ const commentStyleRule: Rule.RuleModule = {
 const plugin: ESLint.Plugin = {
   meta: {
     name: 'eslint-plugin-consistent-comments',
-    version: '1.4.1',
+    version: '1.4.2',
   },
   configs: {
     recommended: {
