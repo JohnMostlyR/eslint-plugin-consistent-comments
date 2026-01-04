@@ -7,6 +7,12 @@
 
 An ESLint plugin that automatically detects and enforces the appropriate comment style based on content. Commented-out code uses `//`, while documentation and explanatory text use `/* */`.
 
+## 🤔 Why?
+
+I want to have a clear distinction between commented-out code and documentation.
+
+Commented-out code should probably be removed from production code, while documentation should stay.
+
 ## ✨ Features
 
 - 🤖 **Smart Detection** - Automatically identifies code vs. documentation in comments using AST parsing
