@@ -19,19 +19,19 @@ import * as espree from 'espree';
 function isDirective(text: string): boolean {
   const trimmed = text.trim();
 
-  // List of directive patterns - these must be exact matches or followed by whitespace/punctuation
+  /* List of directive patterns - these must be exact matches or followed by whitespace/punctuation */
   const directivePatterns = [
-    // TypeScript directives
+    /* TypeScript directives */
     /@ts-(ignore|expect-error|nocheck|check)(\s|$|:)/i,
-    // ESLint directives - must be followed by word boundary or space
+    /* ESLint directives - must be followed by word boundary or space */
     /^eslint-(disable|enable)(\s|$|-)/i,
-    // Prettier directives
+    /* Prettier directives */
     /^prettier-ignore(\s|$|-)/i,
-    // Istanbul directives
+    /* Istanbul directives */
     /^istanbul\s+(ignore|skip|ign)(\s|$)/i,
-    // Deno directives
+    /* Deno directives */
     /^deno-(lint-ignore|fmt-ignore)(\s|$)/i,
-    // Other common directives
+    /* Other common directives */
     /^(NOLINT|noqa|NOSONAR|pragma)\b/i,
   ];
 
