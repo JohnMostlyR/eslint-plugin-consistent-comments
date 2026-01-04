@@ -23,14 +23,19 @@ function isDirective(text: string): boolean {
   const directivePatterns = [
     /* TypeScript directives */
     /@ts-(ignore|expect-error|nocheck|check)(\s|$|:)/i,
+
     /* ESLint directives - must be followed by word boundary or space */
     /^eslint-(disable|enable)(\s|$|-)/i,
+
     /* Prettier directives */
     /^prettier-ignore(\s|$|-)/i,
+
     /* Istanbul directives */
     /^istanbul\s+(ignore|skip|ign)(\s|$)/i,
+
     /* Deno directives */
     /^deno-(lint-ignore|fmt-ignore)(\s|$)/i,
+
     /* Other common directives */
     /^(NOLINT|noqa|NOSONAR|pragma)\b/i,
   ];
@@ -73,10 +78,12 @@ function isCommentedCode(text: string): boolean {
    * We check for common JSDoc patterns that indicate this is documentation.
    */
   const jsdocIndicators = [
-    /\*\s*@\w+/, // Multi-line JSDoc: * @param, * @returns, etc.
-    /@param\s*\{/, // @param with type annotation
-    /@returns?\s*\{/, // @returns with type annotation
-    /@(throws|author|copyright|deprecated|since|example|see|link|name|module|namespace|description|summary)\b/, // Other common JSDoc tags
+    /\*\s*@\w+/ /*
+     * Multi-line JSDoc: * @param, * @returns, etc.
+     * @param with type annotation
+     * @returns with type annotation
+     * Other common JSDoc tags
+     */,
   ];
 
   if (jsdocIndicators.some((pattern) => pattern.test(trimmed))) {
@@ -84,19 +91,23 @@ function isCommentedCode(text: string): boolean {
   }
 
   /*
-   * Check for TypeScript-specific syntax patterns that won't parse with espree.
-   * These patterns indicate commented-out TypeScript code:
-   * - Generic type syntax: Array<T>, Map<K, V>, etc.
-   * - Type annotations: variableName: Type
-   * - Interface/type property definitions: propertyName: Type;
-   * - Type keywords: interface, type, enum, namespace, declare
+   * * Check for TypeScript-specific syntax patterns that won't parse with espree.
+   * * These patterns indicate commented-out TypeScript code:
+   */
+  // * - Generic type syntax: Array<T>, Map<K, V>, etc.
+  /*
+   * * - Type annotations: variableName: Type
+   * * - Interface/type property definitions: propertyName: Type;
+   * * - Type keywords: interface, type, enum, namespace, declare
    */
   const typeScriptPatterns = [
     /\w+<[\w\s,\[\]]+>/, // Generic types: Array<string>, Map<K, V>
     /\w+:\s*\w+<[\w\s,\[\]]+>/, // Properties with generic types: prop: Array<number>
-    /^\s*(interface|type|enum|namespace|declare)\s+\w+/, // Type keywords at start
-    /:\s*(string|number|boolean|any|unknown|never|void|object)\s*[;,\)\}]/, // Type annotations
-    /:\s*\w+\[\]\s*[;,\)\}]/, // Array type syntax: Type[]
+    /^\s*(interface|type|enum|namespace|declare)\s+\w+/ /*
+     * Type keywords at start
+     * Type annotations
+     * Array type syntax: Type[]
+     */,
   ];
 
   if (typeScriptPatterns.some((pattern) => pattern.test(trimmed))) {
@@ -283,14 +294,18 @@ const commentStyleRule: Rule.RuleModule = {
               continue;
             }
 
-            // Skip triple-slash directives (e.g., /// <reference types="..." />)
-            // These are TypeScript compiler directives that must remain as ///
+            /*
+             * Skip triple-slash directives (e.g., /// <reference types="..." />)
+             * These are TypeScript compiler directives that must remain as ///
+             */
             if (commentText.startsWith('/')) {
               continue;
             }
 
-            // Skip directives (like @ts-ignore, eslint-disable, prettier-ignore, etc.)
-            // These are special comments that control code behavior and should not be converted
+            /*
+             * Skip directives (like @ts-ignore, eslint-disable, prettier-ignore, etc.)
+             * These are special comments that control code behavior and should not be converted
+             */
             if (isDirective(commentText)) {
               continue;
             }

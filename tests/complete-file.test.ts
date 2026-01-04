@@ -79,7 +79,7 @@ describe('eslint-plugin-consistent-comments', () => {
 
       const results = await eslint.lintFiles([filePathToTest]);
 
-      // If no fixes were applied, output will be undefined, so read the original file
+      /* If no fixes were applied, output will be undefined, so read the original file */
       const actualOutput =
         results[0]!.output ?? (await readFile(filePathToTest, 'utf-8'));
 
