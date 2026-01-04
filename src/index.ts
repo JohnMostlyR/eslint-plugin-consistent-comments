@@ -2,6 +2,43 @@ import type { ESLint, Rule } from 'eslint';
 import * as espree from 'espree';
 
 /**
+ * Detects if a comment is a directive (special comment that controls code behavior).
+ * Directives should not be converted between comment styles.
+ *
+ * Common directives include:
+ * - TypeScript directives: @ts-ignore, @ts-expect-error, @ts-nocheck, @ts-check
+ * - ESLint directives: eslint-disable, eslint-enable, eslint-disable-next-line
+ * - Prettier directives: prettier-ignore, prettier-ignore-start, prettier-ignore-end
+ * - Istanbul directives: istanbul ignore, istanbul skip, istanbul ign
+ * - Deno directives: deno-lint-ignore, deno-fmt-ignore
+ * - Other directives: NOLINT, noqa, NOSONAR, pragma, etc.
+ *
+ * @param text - The comment text to analyze
+ * @returns true if the comment is a directive
+ */
+function isDirective(text: string): boolean {
+  const trimmed = text.trim();
+
+  // List of directive patterns - these must be exact matches or followed by whitespace/punctuation
+  const directivePatterns = [
+    // TypeScript directives
+    /@ts-(ignore|expect-error|nocheck|check)(\s|$|:)/i,
+    // ESLint directives - must be followed by word boundary or space
+    /^eslint-(disable|enable)(\s|$|-)/i,
+    // Prettier directives
+    /^prettier-ignore(\s|$|-)/i,
+    // Istanbul directives
+    /^istanbul\s+(ignore|skip|ign)(\s|$)/i,
+    // Deno directives
+    /^deno-(lint-ignore|fmt-ignore)(\s|$)/i,
+    // Other common directives
+    /^(NOLINT|noqa|NOSONAR|pragma)\b/i,
+  ];
+
+  return directivePatterns.some((pattern) => pattern.test(trimmed));
+}
+
+/**
  * Detects if a comment contains code by attempting to parse it as JavaScript/TypeScript.
  *
  * This function uses AST parsing instead of regex patterns to accurately determine
@@ -176,9 +213,12 @@ const commentStyleRule: Rule.RuleModule = {
 
           const commentText = comment.value;
           const isCode = isCommentedCode(commentText);
+          const isCommentDirective = isDirective(commentText);
 
-          if (comment.type === 'Block' && isCode) {
+          if (comment.type === 'Block' && isCode && !isCommentDirective) {
             /* Multi-line comment containing code - should be single-line */
+            /* But skip directives - they should stay as-is or be single-line */
+
             context.report({
               loc: comment.loc!,
               messageId: 'useSlashForCode',
@@ -210,6 +250,30 @@ const commentStyleRule: Rule.RuleModule = {
                 );
               },
             });
+          } else if (comment.type === 'Block' && isCommentDirective) {
+            /* Multi-line comment containing a directive - convert to single-line */
+            /* But only if it's a simple single-line directive, not a multi-line block */
+            const lines = commentText.split('\n');
+
+            /* If it's a multi-line comment block, don't convert it */
+            /* Multi-line blocks typically have multiple lines or extra formatting */
+            if (lines.length > 1) {
+              continue;
+            }
+
+            context.report({
+              loc: comment.loc!,
+              messageId: 'useSlashForCode',
+              fix(fixer) {
+                const text = commentText.trim();
+                const replacement = `// ${text}`;
+
+                return fixer.replaceTextRange(
+                  [comment.range![0], comment.range![1]],
+                  replacement,
+                );
+              },
+            });
           } else if (comment.type === 'Line' && !isCode) {
             /* Single-line comment with non-code text - should be multi-line */
             const text = commentText.trim();
@@ -222,6 +286,12 @@ const commentStyleRule: Rule.RuleModule = {
             // Skip triple-slash directives (e.g., /// <reference types="..." />)
             // These are TypeScript compiler directives that must remain as ///
             if (commentText.startsWith('/')) {
+              continue;
+            }
+
+            // Skip directives (like @ts-ignore, eslint-disable, prettier-ignore, etc.)
+            // These are special comments that control code behavior and should not be converted
+            if (isDirective(commentText)) {
               continue;
             }
 
