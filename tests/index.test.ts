@@ -12,10 +12,10 @@ const ruleTester = new RuleTester({
 
 const rule = plugin.rules!['comment-style']!;
 
-// Run the rule tester at the top level, not inside test functions
+/* Run the rule tester at the top level, not inside test functions */
 ruleTester.run('comment-style', rule, {
   valid: [
-    // should flag multi-line comments containing code
+    /* should flag multi-line comments containing code */
     {
       code: '// const x = 5;',
       filename: 'test.ts',
@@ -28,7 +28,8 @@ ruleTester.run('comment-style', rule, {
       code: '// function test() { return true; }',
       filename: 'test.ts',
     },
-    // should correctly identify commented code patterns
+
+    /* should correctly identify commented code patterns */
     {
       code: '// import { foo } from "bar";',
       filename: 'test.ts',
@@ -37,7 +38,8 @@ ruleTester.run('comment-style', rule, {
       code: '// export default class Test {}',
       filename: 'test.ts',
     },
-    // should detect object properties as code
+
+    /* should detect object properties as code */
     {
       code: '// key: value,',
       filename: 'test.ts',
@@ -50,7 +52,8 @@ ruleTester.run('comment-style', rule, {
       code: '// port: 3000',
       filename: 'test.ts',
     },
-    // should not flag triple slash directives
+
+    /* should not flag triple slash directives */
     {
       code: '/// <reference types="vitest/config" />',
       filename: 'test.ts',
@@ -83,7 +86,8 @@ ruleTester.run('comment-style', rule, {
       code: '// deno-lint-ignore no-explicit-any',
       filename: 'test.ts',
     },
-    // edge-case: unicode whitespace and template strings
+
+    /* edge-case: unicode whitespace and template strings */
     {
       code: '//\u00A0@ts-ignore use NBSP before directive',
       filename: 'test.ts',
@@ -96,7 +100,8 @@ ruleTester.run('comment-style', rule, {
       code: `/*\n * prettier-ignore\n * Keep this block as documentation and directive together\n */`,
       filename: 'test.ts',
     },
-    // should treat single identifiers as text, not code
+
+    /* should treat single identifiers as text, not code */
     {
       code: '/* Electron */',
       filename: 'test.ts',
@@ -119,7 +124,7 @@ ruleTester.run('comment-style', rule, {
     },
   ],
   invalid: [
-    // should flag multi-line comments containing code
+    /* should flag multi-line comments containing code */
     {
       code: '/* const x = 5; */',
       filename: 'test.ts',
@@ -138,7 +143,8 @@ ruleTester.run('comment-style', rule, {
       errors: [{ messageId: 'useMultiLineForText' }],
       output: '/* This is a regular comment */',
     },
-    // should handle multi-line block comments with code
+
+    /* should handle multi-line block comments with code */
     {
       code: `/*
   const x = 5;
@@ -149,14 +155,16 @@ ruleTester.run('comment-style', rule, {
       output: `// const x = 5;
 // const y = 10;`,
     },
-    // should correctly identify commented code patterns
+
+    /* should correctly identify commented code patterns */
     {
       code: '/* import { foo } from "bar"; */',
       filename: 'test.ts',
       errors: [{ messageId: 'useSlashForCode' }],
       output: '// import { foo } from "bar";',
     },
-    // should detect object properties as code
+
+    /* should detect object properties as code */
     {
       code: '/* key: value, */',
       filename: 'test.ts',
@@ -169,7 +177,8 @@ ruleTester.run('comment-style', rule, {
       errors: [{ messageId: 'useSlashForCode' }],
       output: '// ELECTRON_CLERK_PUBLISHABLE_KEY: z.string().min(1),',
     },
-    // should fix comments that only look like directives but are not
+
+    /* should fix comments that only look like directives but are not */
     {
       code: '// @ts-ignoreX this is not a real directive',
       filename: 'test.ts',
@@ -188,14 +197,16 @@ ruleTester.run('comment-style', rule, {
       errors: [{ messageId: 'useMultiLineForText' }],
       output: '/* istanbul-ignoreer not a directive */',
     },
-    // directives in block comments should be converted to single-line
+
+    /* directives in block comments should be converted to single-line */
     {
       code: '/* prettier-ignore */',
       filename: 'test.ts',
       errors: [{ messageId: 'useSlashForCode' }],
       output: '// prettier-ignore',
     },
-    // should treat single identifiers as text, not code
+
+    /* should treat single identifiers as text, not code */
     {
       code: '// Electron',
       filename: 'test.ts',
@@ -214,7 +225,7 @@ ruleTester.run('comment-style', rule, {
 describe('eslint-plugin-consistent-comments', () => {
   describe('comment-style rule', () => {
     it('should flag multi-line comments containing code', () => {
-      // Test cases are now run at the top level via ruleTester.run()
+      /* Test cases are now run at the top level via ruleTester.run() */
       expect(true).toBe(true);
     });
 
