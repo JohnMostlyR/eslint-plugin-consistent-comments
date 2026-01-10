@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-consistent-comments",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "A eslint plugin to format comments in a consistent way.",
   "keywords": [
     "eslint",
@@ -49,12 +49,12 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@eslint/compat": "2.0.0",
+    "@eslint/compat": "2.0.1",
     "@ianvs/prettier-plugin-sort-imports": "4.7.0",
     "@types/eslint": "9.6.1",
     "@types/espree": "^10.1.0",
     "@types/estree": "1.0.8",
-    "@types/node": "24.10.4",
+    "@types/node": "24.10.6",
     "@vitest/coverage-v8": "4.0.16",
     "eslint": "9.39.2",
     "eslint-plugin-sonarjs": "3.0.5",
@@ -63,7 +63,7 @@
     "jiti": "^2.6.1",
     "prettier": "3.7.4",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.51.0",
+    "typescript-eslint": "8.52.0",
     "unbuild": "3.6.1",
     "vitest": "4.0.16"
   },
