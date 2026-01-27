@@ -262,29 +262,9 @@ const commentStyleRule: Rule.RuleModule = {
               },
             });
           } else if (comment.type === 'Block' && isCommentDirective) {
-            /* Multi-line comment containing a directive - convert to single-line */
-            /* But only if it's a simple single-line directive, not a multi-line block */
-            const lines = commentText.split('\n');
-
-            /* If it's a multi-line comment block, don't convert it */
-            /* Multi-line blocks typically have multiple lines or extra formatting */
-            if (lines.length > 1) {
-              continue;
-            }
-
-            context.report({
-              loc: comment.loc!,
-              messageId: 'useSlashForCode',
-              fix(fixer) {
-                const text = commentText.trim();
-                const replacement = `// ${text}`;
-
-                return fixer.replaceTextRange(
-                  [comment.range![0], comment.range![1]],
-                  replacement,
-                );
-              },
-            });
+            /* Skip block comments that are directives */
+            /* Directives should not be converted - they are special comments that control code behavior */
+            continue;
           } else if (comment.type === 'Line' && !isCode) {
             /* Single-line comment with non-code text - should be multi-line */
             const text = commentText.trim();

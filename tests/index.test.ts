@@ -198,14 +198,6 @@ ruleTester.run('comment-style', rule, {
       output: '/* istanbul-ignoreer not a directive */',
     },
 
-    /* directives in block comments should be converted to single-line */
-    {
-      code: '/* prettier-ignore */',
-      filename: 'test.ts',
-      errors: [{ messageId: 'useSlashForCode' }],
-      output: '// prettier-ignore',
-    },
-
     /* should treat single identifiers as text, not code */
     {
       code: '// Electron',

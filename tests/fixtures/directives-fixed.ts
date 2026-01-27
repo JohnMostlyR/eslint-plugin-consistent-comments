@@ -22,7 +22,7 @@
  * istanbul ignore next
  * istanbul ignore next
  */
-// prettier-ignore
+/* prettier-ignore */
 /* ISTANBUL   IGNORE-NEXT */
 
 /*
