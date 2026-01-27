@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-consistent-comments",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "A eslint plugin to format comments in a consistent way.",
   "keywords": [
     "eslint",
