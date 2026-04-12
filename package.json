@@ -52,7 +52,7 @@
     "@eslint/compat": "^2.0.4",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@types/eslint": "^9.6.1",
-    "@types/espree": "^10.1.0",
+    "@types/espree": "^11.1.0",
     "@types/estree": "^1.0.8",
     "@types/node": "^24.12.2",
     "@vitest/coverage-v8": "^4.1.2",
