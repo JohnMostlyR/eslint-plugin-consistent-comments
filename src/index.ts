@@ -394,7 +394,7 @@ const commentStyleRule: Rule.RuleModule = {
 const plugin: ESLint.Plugin = {
   meta: {
     name: 'eslint-plugin-consistent-comments',
-    version: '1.5.0',
+    version: '1.5.1',
   },
   configs: {
     recommended: {
