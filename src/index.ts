@@ -12,6 +12,7 @@ import * as espree from 'espree';
  * - Istanbul directives: istanbul ignore, istanbul skip, istanbul ign
  * - Deno directives: deno-lint-ignore, deno-fmt-ignore
  * - Other directives: NOLINT, noqa, NOSONAR, pragma, etc.
+ * - Visual Studio directives: #region, #endregion
  *
  * @param text - The comment text to analyze
  * @returns true if the comment is a directive
@@ -38,6 +39,9 @@ function isDirective(text: string): boolean {
 
     /* Other common directives */
     /^(NOLINT|noqa|NOSONAR|pragma)\b/i,
+
+    /* Visual Studio directives */
+    /^(#\s*(?:end)?region)\b/i,
   ];
 
   return directivePatterns.some((pattern) => pattern.test(trimmed));
